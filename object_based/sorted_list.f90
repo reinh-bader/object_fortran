@@ -113,14 +113,23 @@ CONTAINS
       INTEGER, INTENT(out) :: iostat
       CHARACTER(len=*), INTENT(inout) :: iomsg
       
+      CHARACTER(len=2) :: next_component
+      
+      IF ( associated(dtv%next) ) THEN
+         WRITE(next_component, fmt='("T,")') 
+      ELSE
+         WRITE(next_component, fmt='("F")') 
+      END IF
       SELECT CASE (iotype)
       CASE ('LISTDIRECTED')
-         WRITE(unit, fmt=*, delim='quote', iostat=iostat, iomsg=iomsg) dtv%data%string
+         WRITE(unit, fmt=*, delim='quote', iostat=iostat, iomsg=iomsg) &
+               dtv%data%string
       CASE ('NAMELIST')
-         WRITE(unit, fmt=*, iostat=iostat, iomsg=iomsg) '"',dtv%data%string, '",', associated(dtv%next), ","
+         WRITE(unit, fmt=*, iostat=iostat, iomsg=iomsg) '"', &
+               dtv%data%string, '",', trim(next_component)
       CASE default
          iostat = -129
-         iomsg = 'iotype ' // TRIM(iotype) // ' not implemented'
+         iomsg = 'iotype ' // trim(iotype) // ' not implemented'
          RETURN
       END SELECT
       IF ( associated(dtv%next) ) THEN
@@ -240,7 +249,8 @@ PROGRAM exercise_sorted_list
    ALLOCATE( my_list )
    work : BLOCK     
       TYPE(sortable) :: array(items)    
-      TYPE(sorted_list) :: your_list, joint_list
+      TYPE(sorted_list), ALLOCATABLE :: your_list
+      TYPE(sorted_list) :: joint_list
       INTEGER :: i, iu
   
       DO i=1, items
@@ -267,6 +277,7 @@ PROGRAM exercise_sorted_list
       CLOSE(iu)
       
 ! small list without constructor
+      ALLOCATE(your_list)
       CALL add_to_sorted_list(your_list, sortable("eggs") )
       CALL add_to_sorted_list(your_list, sortable("tongs") )
 
@@ -295,8 +306,14 @@ PROGRAM exercise_sorted_list
            file='my_namelist.txt')
       READ(iu, nml=my_namelist)
       WRITE(*, fmt=*) 'Contents of namelist after reread:'
-      WRITE(*, fmt=*) listlen, my_list   
+      WRITE(*, fmt=*) listlen, my_list
       CLOSE(iu)
+      
+!  Move a list
+      CALL move_alloc(your_list, my_list) 
+      WRITE(*, fmt=*) 'Contents of my_list and allocation status of your_list after move:'
+      WRITE(*, fmt=*) my_list
+      WRITE(*, fmt=*) allocated(your_list)
       
 !  Writing with DT should produce an error message
       WRITE(*, fmt='(DT"sorted_list_fmt"(10,2))', iostat=iostat, iomsg=iomsg) my_list

@@ -13,4 +13,4 @@ all : polynomial.exe sorted_list.exe
 
 
 clean :
-	rm -rf a.out *~ *.o *.exe  *.mod *.log
+	rm -rf a.out *~ *.o *.exe  *.mod *.log my_namelist.txt
