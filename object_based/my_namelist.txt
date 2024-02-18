@@ -1,0 +1,5 @@
+ &MY_NAMELIST
+ LISTLEN =           9,
+ MY_LIST= "aargh", T ,"apples", T ,"book", T ,"carrots", T ,"pears", T ,"peas",
+ T ,"phoo", T ,"scissors", T ,"spades", F ,
+ /
