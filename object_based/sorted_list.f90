@@ -175,7 +175,7 @@ CONTAINS
             EXIT deep_copy
          END IF
          p => p%next
-         if ( associated(p) ) allocate(q%next)
+         if ( associated(p) ) ALLOCATE( q%next )
          q => q%next
       END DO deep_copy
    END SUBROUTINE
