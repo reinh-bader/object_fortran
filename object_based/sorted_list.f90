@@ -115,21 +115,22 @@ CONTAINS
       
       CHARACTER(len=2) :: next_component
       
-      IF ( associated(dtv%next) ) THEN
-         WRITE(next_component, fmt='("T,")') 
-      ELSE
-         WRITE(next_component, fmt='("F")') 
-      END IF
       SELECT CASE (iotype)
       CASE ('LISTDIRECTED')
          WRITE(unit, fmt=*, delim='quote', iostat=iostat, iomsg=iomsg) &
                dtv%data%string
       CASE ('NAMELIST')
+         IF ( associated(dtv%next) ) THEN
+            WRITE(next_component, fmt='("T,")') 
+         ELSE
+            WRITE(next_component, fmt='("F")') 
+         END IF
          WRITE(unit, fmt=*, iostat=iostat, iomsg=iomsg) '"', &
                dtv%data%string, '",', trim(next_component)
       CASE default
          iostat = -129
          iomsg = 'iotype ' // trim(iotype) // ' not implemented'
+!        write(*,*) 'debug: iostat = ',iostat, iotype
          RETURN
       END SELECT
       IF ( associated(dtv%next) ) THEN
@@ -246,7 +247,8 @@ PROGRAM exercise_sorted_list
    INTEGER :: listlen, iostat
    NAMELIST / my_namelist / listlen, my_list
      
-   ALLOCATE( my_list )
+   ALLOCATE( my_list ) ! necessary because overloaded assignment
+                       ! suppresses auto-allocation
    work : BLOCK     
       TYPE(sortable) :: array(items)    
       TYPE(sorted_list), ALLOCATABLE :: your_list

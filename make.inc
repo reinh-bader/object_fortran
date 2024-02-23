@@ -39,7 +39,8 @@ ifeq ($(COMPILER),NAG)
 F90=nagfor
 CC=gcc
 FFLAGS=-f2018
-DEBUG=-g -mtrace -C=all
+#DEBUG=-g -mtrace -C=all
+DEBUG=-g -C=all
 FPP=-fpp
 FOPT=-O3
 FPAR=-openmp

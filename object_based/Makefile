@@ -1,4 +1,4 @@
-COMPILER=Intel
+COMPILER=GCC
 include ../make.inc
 #FOPT+=$(DEBUG)
 
