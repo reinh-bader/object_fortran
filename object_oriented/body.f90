@@ -86,7 +86,7 @@ CONTAINS
                a_body%charge = a_body%charge + delta
             END SELECT
          CASE default
-            CALL a_body%body%update(a_change) ! assure that a change to a parent component is dealt with
+            CALL a_body % body % update(a_change) ! assure that a change to a parent component is dealt with
          END SELECT
       END IF
    END SUBROUTINE
@@ -123,8 +123,8 @@ PROGRAM exercise_body
       dp = change(description='momentum', value=[-1.5,3.0,0.0])
 
 ! both the following dispatch to update_charged_body
-      CALL my_polymorphic_body%update(dc) 
-      CALL my_polymorphic_body%update(dp)
+      CALL my_polymorphic_body % update(dc) 
+      CALL my_polymorphic_body % update(dp)
       
       
       SELECT TYPE (my_polymorphic_body) 

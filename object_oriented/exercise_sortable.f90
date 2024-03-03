@@ -21,6 +21,7 @@ PROGRAM exercise_sortable
       END IF
    ELSE
       WRITE(*,*) 'At least one of the strings was not allocated.'
+      WRITE(*,*) 'Hint: currently only the type "sortable_string" is supported'
    END IF
    
 END PROGRAM

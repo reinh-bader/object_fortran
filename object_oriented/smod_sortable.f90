@@ -4,7 +4,7 @@ CONTAINS
       USE mod_sortable_extensions, ONLY : sortable_string
       
       IF ( allocated(init%description) .AND. allocated(init%value) ) THEN
-         SELECT CASE (init%description)
+         SELECT CASE ( init%description )
          CASE ('sortable_string')
             SELECT TYPE ( value => init%value(1) )
             TYPE IS (CHARACTER(len=*)) 
