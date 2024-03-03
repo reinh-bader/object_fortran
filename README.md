@@ -15,5 +15,7 @@ References:
 Organisation of source code:
 * Folder object_based contains the sources for two container-like
   types and associated procedures that illustrate how ALLOCATABLE and
-  POINTER type components can be appropriately handled.
+  POINTER type components might be appropriately handled.
+* Folder object_oriented contains sources for illustrating how to make
+  use of the single-inheritance model in Fortran in various ways
 

@@ -1,5 +1,7 @@
-COMPILER=Intel
+# The ../make.inc file contains possible settings for COMPILER
+COMPILER=NAG
 include ../make.inc
+#uncomment the following line to enable full checking
 #FOPT+=$(DEBUG)
 
 
@@ -24,6 +26,9 @@ smod_sortable.o : smod_sortable.f90 | mod_sortable_extensions.o
 	$(F90) $(FFLAGS) $(FOPT) -c -o $@ $^
 	
 exercise_sortable.exe : exercise_sortable.f90 mod_utility_types.o mod_sortable.o mod_sortable_extensions.o smod_sortable.o
+	$(F90) $(FFLAGS) $(FOPT) -o $@  $^
+	
+object_setup.exe : object_setup.f90 mod_utility_types.o 
 	$(F90) $(FFLAGS) $(FOPT) -o $@  $^
 
 clean :

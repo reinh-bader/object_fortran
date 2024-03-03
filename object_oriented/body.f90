@@ -3,7 +3,11 @@ MODULE mod_body
    IMPLICIT none
    
    PRIVATE
-   PUBLIC :: legacy_invocations, change
+   PUBLIC :: legacy_invocations, change, body_fmt
+   
+   INTEGER, PARAMETER :: format_strlen = 112
+   CHARACTER(len=format_strlen), PARAMETER :: body_fmt = &
+             '("mass=",1P,E9.2,", pos=",0P,3F5.2,", vel=",3F5.2,:,", charge=",1P,E9.2)'
    
    TYPE, PUBLIC :: body
       REAL :: mass
@@ -18,28 +22,17 @@ MODULE mod_body
       PROCEDURE :: update => update_charged_body
    END TYPE
    
+   
 CONTAINS
-!  the only public procedure serves to exercise
-!  the legacy features (which are not accessible outside the module)
+!  this procedure serves to exercise the legacy features 
+!  (which currently are not accessible outside the module)
    SUBROUTINE legacy_invocations()
-     TYPE(body) :: my_basketball = body(1.5, [0.0, 0.0, 2.0], [10.0, 0.0,0.0])
-     TYPE(body) :: a_mutilated_proton
-     TYPE(charged_body) :: a_proton
-     
+     TYPE(body) :: my_basketball = body(1.5, [0.0, 0.0, 2.0], [10.0, 0.0, 0.0])
      
      CALL kick(my_basketball, dp=[-3.0, 0.0, 4.5])
      CALL accrete(my_basketball, dm=-0.05)         ! lose some air
-     WRITE(*,*) 'my_basketball has value ',my_basketball
-! Construct a_proton
-     a_proton = charged_body(mass=1.672E-27, pos=[0.,0.,0.], vel=[0.,0.,0.], &
-                             charge=1.602E-19)
-     WRITE(*,*) 'a_proton first construction: ',a_proton
-
-! Alternative construction with the same result
-     a_mutilated_proton = body(mass=1.672E-27, pos=[0.,0.,0.], vel=[0.,0.,0.])
-     a_proton = charged_body(body=a_mutilated_proton, charge=1.602E-19)
-     WRITE(*,*) 'a_proton second construction: ',a_proton
-    
+     WRITE(*,*) 'my_basketball has value '
+     WRITE(*,fmt=body_fmt) my_basketball
    END SUBROUTINE
 !
 ! regular module procedures follow
@@ -103,6 +96,22 @@ PROGRAM exercise_body
    IMPLICIT none
  
    CALL legacy_invocations()
+
+   constr : BLOCK   
+      TYPE(body) :: a_mutilated_proton
+      TYPE(charged_body) :: a_proton
+! Construct a_proton
+      a_proton = charged_body(mass=1.672E-27, pos=[0.0, 0.0, 0.0], vel=[0.0, 0.0, 0.0], &
+                              charge=1.602E-19)
+      WRITE(*,*) 'a_proton first construction: '
+      WRITE(*,fmt=body_fmt) a_proton
+
+! Alternative construction with the same result
+      a_mutilated_proton = body(mass=1.672E-27, pos=[0.0, 0.0, 0.0], vel=[0.0, 0.0, 0.0])
+      a_proton = charged_body(body=a_mutilated_proton, charge=1.602E-19)
+      WRITE(*,*) 'a_proton second construction: '
+      WRITE(*,fmt=body_fmt) a_proton
+   END BLOCK constr
    
    tbp_calls : BLOCK
       TYPE(change) ::  dc, dp
@@ -117,9 +126,12 @@ PROGRAM exercise_body
       CALL my_polymorphic_body%update(dc) 
       CALL my_polymorphic_body%update(dp)
       
+      
       SELECT TYPE (my_polymorphic_body) 
+! here the programmer knows what the type is, so can keep things simple ...
       TYPE IS (charged_body)
-         WRITE(*,*) 'my_polymorphic_body has value ',my_polymorphic_body
+         WRITE(*,*) 'my_polymorphic_body has value '
+         WRITE(*,fmt=body_fmt) my_polymorphic_body
       END SELECT  
    END BLOCK tbp_calls
 END PROGRAM
