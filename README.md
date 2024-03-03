@@ -4,8 +4,8 @@ Examples for object-related Fortran techniques
 Note: 
 * this is currently under development
 * this is intended to be illustrative code
-* therefore, it provides no complete and robust implementation of
-  any concept or algorrithm, but is intended as demonstration of 
+* it provides no complete and robust implementation of
+  any concept or algorithm, but is intended as demonstration of 
   language features and programming techniques
 
 References:
