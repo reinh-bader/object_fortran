@@ -15,9 +15,9 @@ PROGRAM exercise_sortable
       
    IF ( allocated(s1) .AND. allocated(s2) ) THEN
       IF ( s1 < s2 ) THEN
-         WRITE(*,*) 'First string precedes second string'
+         WRITE(*,*) 'String ', s1, ' precedes string ', s2
       ELSE
-         WRITE(*,*) 'First string does not precede second string'
+         WRITE(*,*) 'String ', s1, ' does not precede string ', s2
       END IF
    ELSE
       WRITE(*,*) 'At least one of the strings was not allocated.'

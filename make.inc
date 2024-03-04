@@ -6,7 +6,8 @@ ifeq ($(COMPILER),Intel)
 F90=ifx
 CC=icx
 FFLAGS=-standard-semantics
-DEBUG=-g -traceback -check all
+#DEBUG=-g -traceback -check all
+DEBUG=-g -traceback
 FPP=-fpp
 FOPT=-O3 -xAVX  # for Sandy Bridge
 #FOPT=-O3 -xAVX2  # for Haswell

@@ -8,6 +8,10 @@ MODULE mod_sortable_extensions
       CHARACTER(len=:), ALLOCATABLE :: string
    CONTAINS
       PROCEDURE :: less_than => less_than_string
+      PROCEDURE, NOPASS :: type_of => type_of_string
+      PROCEDURE :: value_of => value_of_string
+      PROCEDURE :: set => set_string
+      PROCEDURE :: write_fmt => write_fmt_string
    END TYPE
 CONTAINS
    PURE LOGICAL FUNCTION less_than_string(s1, s2)
@@ -20,10 +24,46 @@ CONTAINS
             less_than_string = llt(s1%string,s2%string)
          ELSE
             less_than_string = .false.    
-        END IF
-     CLASS default
-        less_than_string = .false.
-     END SELECT
+         END IF
+      CLASS default
+         less_than_string = .false.
+      END SELECT
    END FUNCTION   
-   
+   PURE FUNCTION type_of_string() RESULT (tstr)
+      CHARACTER(len=:), ALLOCATABLE :: tstr 
+      tstr = 'sortable_string'
+   END FUNCTION
+   PURE FUNCTION  value_of_string(s) RESULT (tstr)
+      CLASS(sortable_string), INTENT(in) :: s
+      CHARACTER(len=:), ALLOCATABLE :: tstr 
+      tstr = trim(s%string)
+   END FUNCTION
+   SUBROUTINE set_string(s, init)
+      CLASS(sortable_string), INTENT(inout) :: s
+      TYPE(initialize), INTENT(in) :: init
+      
+      IF ( allocated(init%value) ) THEN
+         SELECT TYPE ( value => init%value(1)) 
+         TYPE IS ( CHARACTER(len=*) ) 
+            s%string = value
+         END SELECT
+      END IF
+   END SUBROUTINE
+   SUBROUTINE write_fmt_string(dtv, unit, iotype, v_list, iostat, iomsg)
+      CLASS(sortable_string), INTENT(in) :: dtv
+      INTEGER, INTENT(in) :: unit, v_list(:)
+      CHARACTER(len=*), INTENT(in) :: iotype
+      INTEGER, INTENT(out) :: iostat
+      CHARACTER(len=*), INTENT(inout) :: iomsg
+      
+      SELECT CASE ( trim(iotype) )
+      CASE ('LISTDIRECTED')
+         WRITE(unit, fmt=*, delim='quote', iostat=iostat, iomsg=iomsg) dtv%string
+      CASE ('NAMELIST')
+         WRITE(unit, fmt=*, delim='quote', iostat=iostat, iomsg=iomsg) dtv%string
+      CASE default
+         iostat = 129
+         iomsg = 'iotype ' // trim(iotype) // ' not implemented'
+      END SELECT
+   END SUBROUTINE
 END MODULE

@@ -5,9 +5,9 @@ MODULE mod_body
    PRIVATE
    PUBLIC :: legacy_invocations, change, body_fmt
    
-   INTEGER, PARAMETER :: format_strlen = 112
+   INTEGER, PARAMETER :: format_strlen = 105
    CHARACTER(len=format_strlen), PARAMETER :: body_fmt = &
-             '("mass=",1P,E9.2,", pos=",0P,3F5.2,", vel=",3F5.2,:,", charge=",1P,E9.2)'
+             '("mass=",ES9.2,", pos=",3F5.2,", vel=",3F5.2,:,", charge=",ES9.2)'
    
    TYPE, PUBLIC :: body
       REAL :: mass
@@ -21,8 +21,6 @@ MODULE mod_body
    CONTAINS
       PROCEDURE :: update => update_charged_body
    END TYPE
-   
-   
 CONTAINS
 !  this procedure serves to exercise the legacy features 
 !  (which currently are not accessible outside the module)
@@ -116,9 +114,9 @@ PROGRAM exercise_body
    tbp_calls : BLOCK
       TYPE(change) ::  dc, dp
       CLASS(body), ALLOCATABLE :: my_polymorphic_body
- 
+      
+! the following statement auto-allocates the left hand side
       my_polymorphic_body = charged_body(mass=1.5, pos=[0.,0.,0.], vel=[2.,0.,0.], charge=2.41E-5)
-!  the above statement auto-allocates the left hand side
       dc = change(description='charge', value=[5.0E-6])
       dp = change(description='momentum', value=[-1.5,3.0,0.0])
 

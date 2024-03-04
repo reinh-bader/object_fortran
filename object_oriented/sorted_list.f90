@@ -1,25 +1,3 @@
-MODULE mod_sortable
-   IMPLICIT none
-   PRIVATE
-   PUBLIC :: OPERATOR(<)
-   TYPE, PUBLIC :: sortable
-      CHARACTER(len=:), ALLOCATABLE :: string
-   END TYPE
-   
-   INTERFACE OPERATOR(<)
-      MODULE PROCEDURE less_than
-   END INTERFACE
-CONTAINS
-   PURE LOGICAL FUNCTION less_than(s1, s2)
-      TYPE(sortable), INTENT(in) :: s1, s2
-      
-      IF ( allocated(s1%string) .AND. allocated(s2%string) ) THEN
-         less_than = llt(s1%string,s2%string)
-      ELSE
-         less_than = .false.    
-      END IF
-   END FUNCTION   
-END MODULE
 MODULE mod_sorted_list
    USE mod_sortable
    IMPLICIT none
@@ -28,7 +6,7 @@ MODULE mod_sorted_list
 	        add_to_sorted_list, lists_are_aliased
    TYPE, PUBLIC :: sorted_list
       PRIVATE
-      TYPE(sortable) :: data
+      CLASS(sortable), ALLOCATABLE :: data
       TYPE(sorted_list), POINTER :: next => null()
    CONTAINS
       FINAL :: delete_sorted_list
@@ -52,28 +30,28 @@ MODULE mod_sorted_list
       MODULE PROCEDURE assign_sorted_list
    END INTERFACE
 CONTAINS
-   PURE FUNCTION create_sorted_list(item_array) RESULT(head)
-      TYPE(sortable), INTENT(in) :: item_array(:)
+   FUNCTION create_sorted_list(item_array) RESULT(head)
+      CLASS(sortable), INTENT(in) :: item_array(:)
       TYPE(sorted_list) :: head
       
       INTEGER :: i
       
-      IF (size(item_array) == 0) RETURN
+      IF ( size(item_array) == 0 ) RETURN
       
       DO i = 1, size(item_array)
          CALL add_to_sorted_list(head, item_array(i))
          ! handles tedious details of pointer fiddling
      END DO
    END FUNCTION
-   PURE SUBROUTINE add_to_sorted_list(list, item)
+   SUBROUTINE add_to_sorted_list(list, item)
       TYPE(sorted_list), INTENT(inout), TARGET :: list
-      TYPE(sortable), INTENT(in) :: item
+      CLASS(sortable), INTENT(in) :: item
      
       TYPE(sorted_list), POINTER :: head, current, prev, new
    
       ! incoming list is virginal
-      IF ( .NOT. allocated(list%data%string) ) THEN
-          list%data = item
+      IF ( .NOT. allocated(list%data) ) THEN
+          ALLOCATE( list%data, source=item )
           RETURN
       END IF   
    
@@ -82,25 +60,34 @@ CONTAINS
       prev => null()
       search : DO
          IF ( associated(current) ) THEN
-            IF (item < current%data ) THEN ! insert before current
-		       ALLOCATE( new )
-		       IF ( associated(prev) ) THEN
-       		      new%data = item
-                  new%next => current
-		          prev%next => new
-		       ELSE                        ! adjust beginning of list
-		          new%data = list%data
-		          new%next => current%next
-		          list%data = item
-		          list%next => new
+            WRITE(*,*) 'same (item, current) ? ', same_type_as(item, current%data)
+            IF ( same_type_as(item, current%data) ) THEN
+               IF ( item < current%data ) THEN ! insert before current
+	   	          ALLOCATE( new )
+		          IF ( associated(prev) ) THEN
+       		         ALLOCATE( new%data, source=item )
+                     new%next => current
+		             prev%next => new
+		          ELSE                        ! adjust beginning of list
+		             ALLOCATE (new%data, source=list%data )
+		             new%next => current%next
+		             DEALLOCATE( list%data )
+		             ALLOCATE(list%data, source=item)
+		             list%next => new
+		          END IF
+		          EXIT search
 		       END IF
-		       EXIT search
             END IF
          ELSE
-            ALLOCATE( current )            ! insert at end
-            current%data = item
-            prev%next => current
-            EXIT search
+            WRITE(*,*) 'prev%data: ', allocated(prev%data)
+ !           WRITE(*,*) 'values: ', item, prev%data
+            WRITE(*,*) 'same (item, prev) ? ', same_type_as(item, prev%data)
+           IF ( same_type_as(item, prev%data) ) THEN
+               ALLOCATE( current )            ! insert at end
+               ALLOCATE( current%data, source=item)
+               prev%next => current
+               EXIT search
+            END IF
          END IF
          prev => current
          current => current%next
@@ -118,7 +105,7 @@ CONTAINS
       SELECT CASE (iotype)
       CASE ('LISTDIRECTED')
          WRITE(unit, fmt=*, delim='quote', iostat=iostat, iomsg=iomsg) &
-               dtv%data%string
+               dtv%data
       CASE ('NAMELIST')
          IF ( associated(dtv%next) ) THEN
             WRITE(next_component, fmt='("T,")') 
@@ -126,11 +113,10 @@ CONTAINS
             WRITE(next_component, fmt='("F")') 
          END IF
          WRITE(unit, fmt=*, iostat=iostat, iomsg=iomsg) '"', &
-               dtv%data%string, '",', trim(next_component)
+               dtv%data%type_of(), '",', dtv%data, ',', trim(next_component)
       CASE default
          iostat = 129
          iomsg = 'iotype ' // trim(iotype) // ' not implemented'
-!        write(*,*) 'debug: iostat = ',iostat, iotype
          RETURN
       END SELECT
       IF ( associated(dtv%next) ) THEN
@@ -145,13 +131,17 @@ CONTAINS
       CHARACTER(len=*), INTENT(inout) :: iomsg
       
       INTEGER, PARAMETER :: maxlen=128
-      CHARACTER(len=maxlen) :: str
+      CHARACTER(len=maxlen) :: type, value
+      CLASS(sortable), ALLOCATABLE :: data
       LOGICAL :: next
       
       SELECT CASE (iotype)
       CASE ('NAMELIST')
-         READ(unit, fmt=*, iostat=iostat, iomsg=iomsg) str, next
-         CALL add_to_sorted_list(dtv, sortable(trim(str)))
+         READ(unit, fmt=*, iostat=iostat, iomsg=iomsg) type 
+         IF ( iostat /= 0 ) RETURN    
+         READ(unit, fmt=*, iostat=iostat, iomsg=iomsg) value, next  
+         data = sortable(type, value)
+         CALL add_to_sorted_list(dtv, data)
       CASE default
          iostat = 129
          iomsg = 'iotype ' // TRIM(iotype) // ' not implemented'
@@ -237,10 +227,11 @@ PROGRAM exercise_sorted_list
    USE mod_sorted_list
    IMPLICIT none
    
-   INTEGER, PARAMETER :: items = 7, maxlen = 8, strlen=128
+   INTEGER, PARAMETER :: items = 7, maxlen = 8, strlen=128 
    CHARACTER(len=maxlen), PARAMETER :: str(items) = &
      [ "pears   ", "book    ", "apples  ", &
        "scissors", "spades  ", "peas    ", "carrots " ]
+   CHARACTER(len=*), PARAMETER :: type_used = "sortable_string"
        
    CHARACTER(len=strlen) :: iomsg
    TYPE(sorted_list), ALLOCATABLE :: my_list    
@@ -250,23 +241,28 @@ PROGRAM exercise_sorted_list
    ALLOCATE( my_list ) ! necessary because overloaded assignment
                        ! suppresses auto-allocation
    work : BLOCK     
-      TYPE(sortable) :: array(items)    
+      CLASS(sortable), ALLOCATABLE :: array(:)    
       TYPE(sorted_list), ALLOCATABLE :: your_list
       TYPE(sorted_list) :: joint_list
       INTEGER :: i, iu
   
+!      array = sortable([ (initialize(type_used, trim(str(i)(:))), i=1, items) ])
+!     the above fails due to buggy compilers ...
+
+      ALLOCATE( array(items), mold=sortable(initialize(type_used)) )
       DO i=1, items
-         array(i) = sortable( trim(str(i)(:)) )
+         CALL array(i)%set(initialize(type_used, trim(str(i)(:))))
+         WRITE(*,*) array(i)
       END DO
-      
+
 ! construct a list
       my_list = sorted_list(array)
       WRITE(*, fmt=*) 'Contents of my_list:'
       WRITE(*, fmt=*) my_list
-   
+      stop
 ! extend existing list
-      CALL add_to_sorted_list(my_list, sortable("aargh") )
-      CALL add_to_sorted_list(my_list, sortable("phoo") )
+      CALL add_to_sorted_list(my_list, sortable(initialize(type_used, "aargh")))
+      CALL add_to_sorted_list(my_list, sortable(initialize(type_used, "phoo")))
    
       WRITE(*, fmt=*) 'Contents of extended my_list:'
       WRITE(*, fmt=*) my_list
@@ -280,8 +276,8 @@ PROGRAM exercise_sorted_list
       
 ! small list without constructor
       ALLOCATE(your_list)
-      CALL add_to_sorted_list(your_list, sortable("eggs") )
-      CALL add_to_sorted_list(your_list, sortable("tongs") )
+      CALL add_to_sorted_list(your_list, sortable(initialize(type_used,"eggs")))
+      CALL add_to_sorted_list(your_list, sortable(initialize(type_used,"tongs")))
 
       WRITE(*, fmt=*) 'Contents of your_list:'
       WRITE(*, fmt=*) your_list

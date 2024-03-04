@@ -15,10 +15,12 @@ MODULE mod_utility_types
 CONTAINS
    TYPE(any_object) FUNCTION create_scalar(description, value)
       CHARACTER(len=*), INTENT(in) :: description
-      CLASS(*), INTENT(in) :: value
+      CLASS(*), OPTIONAL, INTENT(in) :: value
       
-      create_scalar % description = description
-      ALLOCATE( create_scalar % value(1), source = value ) 
+      create_scalar % description = trim(description)
+      IF ( present(value) ) THEN
+         ALLOCATE( create_scalar % value(1), source = value ) 
+      END IF
    END FUNCTION
    TYPE(any_object) FUNCTION create_array(description, value, shape)
       CHARACTER(len=*), INTENT(in) :: description
@@ -26,8 +28,10 @@ CONTAINS
       INTEGER, OPTIONAL, INTENT(in) :: shape(:) ! really ony needed for
                                                 ! target rank > 1
       
-      create_array % description = description
-      create_array % value = value 
-      IF ( present(shape) ) create_array % shape = shape
+      create_array % description = trim(description)
+      ALLOCATE( create_array % value, source = value)
+      IF ( present(shape) ) THEN
+         create_array % shape = shape
+      END IF
    END FUNCTION
 END MODULE
