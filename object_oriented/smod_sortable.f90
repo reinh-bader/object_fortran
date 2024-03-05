@@ -1,4 +1,5 @@
 SUBMODULE (mod_sortable) smod_constructor
+   USE, INTRINSIC :: iso_fortran_env, ONLY : error_unit
 CONTAINS
    MODULE PROCEDURE create_sortable
       USE mod_sortable_extensions, ONLY : sortable_string
@@ -41,6 +42,7 @@ CONTAINS
    MODULE PROCEDURE create_sortable_from_string
       USE mod_sortable_extensions, ONLY : sortable_string
      
+!      WRITE(error_unit, *) 'started constructor with ', trim(type), trim(value)
       SELECT CASE ( trim(type) )
       CASE ('sortable_string')
           ALLOCATE( r, source=sortable_string(trim(value)) )

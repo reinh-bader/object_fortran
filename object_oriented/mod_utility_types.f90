@@ -27,7 +27,6 @@ CONTAINS
       CLASS(*), INTENT(in) :: value(:)
       INTEGER, OPTIONAL, INTENT(in) :: shape(:) ! really ony needed for
                                                 ! target rank > 1
-      
       create_array % description = trim(description)
       ALLOCATE( create_array % value, source = value)
       IF ( present(shape) ) THEN

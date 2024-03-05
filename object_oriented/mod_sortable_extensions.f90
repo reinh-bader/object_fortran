@@ -1,5 +1,6 @@
 MODULE mod_sortable_extensions
    USE mod_sortable
+   USE, INTRINSIC :: iso_fortran_env, ONLY : error_unit
    IMPLICIT none
    
    PRIVATE 
@@ -56,11 +57,17 @@ CONTAINS
       INTEGER, INTENT(out) :: iostat
       CHARACTER(len=*), INTENT(inout) :: iomsg
       
+!      WRITE(error_unit,*) 'iotype in write_fmtstring ', trim(iotype)
+      
       SELECT CASE ( trim(iotype) )
       CASE ('LISTDIRECTED')
-         WRITE(unit, fmt=*, delim='quote', iostat=iostat, iomsg=iomsg) dtv%string
+!         WRITE(error_unit,*) ' to LISTDIRECTED'
+         WRITE(unit, fmt=*, iostat=iostat, iomsg=iomsg) '"',dtv%string,'"'
+!         WRITE(error_unit,*) ' LISTDIRECTED done.'
       CASE ('NAMELIST')
-         WRITE(unit, fmt=*, delim='quote', iostat=iostat, iomsg=iomsg) dtv%string
+!         WRITE(error_unit,*) ' to NAMELIST'
+         WRITE(unit, fmt=*, iostat=iostat, iomsg=iomsg) '"',dtv%string,'"'
+!         WRITE(error_unit,*) ' NAMELIST done.'
       CASE default
          iostat = 129
          iomsg = 'iotype ' // trim(iotype) // ' not implemented'

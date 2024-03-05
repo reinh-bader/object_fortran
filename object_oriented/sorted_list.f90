@@ -1,9 +1,10 @@
 MODULE mod_sorted_list
    USE mod_sortable
+   USE, INTRINSIC :: iso_fortran_env, ONLY : error_unit
    IMPLICIT none
    PRIVATE
    PUBLIC :: WRITE(formatted), READ(formatted), OPERATOR(//), ASSIGNMENT(=), &
-	        add_to_sorted_list, lists_are_aliased
+             add_to_sorted_list, lists_are_aliased
    TYPE, PUBLIC :: sorted_list
       PRIVATE
       CLASS(sortable), ALLOCATABLE :: data
@@ -13,7 +14,7 @@ MODULE mod_sorted_list
    END TYPE
    
    INTERFACE sorted_list 
-! the default constructor is unavailable because the type is opaque
+! the default constructor is unavailable because the type is opaque;
 ! the specific has a different signature than the structure constructor
       MODULE PROCEDURE :: create_sorted_list
    END INTERFACE
@@ -60,7 +61,7 @@ CONTAINS
       prev => null()
       search : DO
          IF ( associated(current) ) THEN
-            WRITE(*,*) 'same (item, current) ? ', same_type_as(item, current%data)
+            !WRITE(*,*) 'same (item, current) ? ', same_type_as(item, current%data)
             IF ( same_type_as(item, current%data) ) THEN
                IF ( item < current%data ) THEN ! insert before current
 	   	          ALLOCATE( new )
@@ -69,19 +70,19 @@ CONTAINS
                      new%next => current
 		             prev%next => new
 		          ELSE                        ! adjust beginning of list
-		             ALLOCATE (new%data, source=list%data )
+		             ALLOCATE( new%data, source=list%data )
 		             new%next => current%next
 		             DEALLOCATE( list%data )
-		             ALLOCATE(list%data, source=item)
+		             ALLOCATE( list%data, source=item )
 		             list%next => new
 		          END IF
 		          EXIT search
 		       END IF
             END IF
          ELSE
-            WRITE(*,*) 'prev%data: ', allocated(prev%data)
- !           WRITE(*,*) 'values: ', item, prev%data
-            WRITE(*,*) 'same (item, prev) ? ', same_type_as(item, prev%data)
+            !WRITE(error_unit,*) 'prev%data: ', allocated(prev%data)
+            !WRITE(error_unit,*) 'values: ', item%value_of(), prev%data%value_of()
+            !WRITE(error_unit,*) 'same (item, prev) ? ', same_type_as(item, prev%data)
            IF ( same_type_as(item, prev%data) ) THEN
                ALLOCATE( current )            ! insert at end
                ALLOCATE( current%data, source=item)
@@ -101,10 +102,12 @@ CONTAINS
       CHARACTER(len=*), INTENT(inout) :: iomsg
       
       CHARACTER(len=2) :: next_component
+      CHARACTER(len=1024) :: record
       
+!      WRITE(error_unit,*) 'iotype in write_fmt_list ', trim(iotype)
       SELECT CASE (iotype)
       CASE ('LISTDIRECTED')
-         WRITE(unit, fmt=*, delim='quote', iostat=iostat, iomsg=iomsg) &
+         WRITE(unit, fmt=*, iostat=iostat, iomsg=iomsg) &
                dtv%data
       CASE ('NAMELIST')
          IF ( associated(dtv%next) ) THEN
@@ -112,8 +115,10 @@ CONTAINS
          ELSE
             WRITE(next_component, fmt='("F")') 
          END IF
-         WRITE(unit, fmt=*, iostat=iostat, iomsg=iomsg) '"', &
+         WRITE(record, fmt=*) '"', &
                dtv%data%type_of(), '",', dtv%data, ',', trim(next_component)
+         !WRITE(error_unit,*) 'YYY', trim(record)
+         WRITE(unit, fmt=*, iostat=iostat, iomsg=iomsg) trim(record)
       CASE default
          iostat = 129
          iomsg = 'iotype ' // trim(iotype) // ' not implemented'
@@ -123,7 +128,7 @@ CONTAINS
          CALL write_fmt_list(dtv%next, unit, iotype, v_list, iostat, iomsg)
       END IF
    END SUBROUTINE
-   RECURSIVE SUBROUTINE read_fmt_list(dtv, unit, iotype, v_list, iostat, iomsg)
+   SUBROUTINE read_fmt_list(dtv, unit, iotype, v_list, iostat, iomsg)
       CLASS(sorted_list), INTENT(inout) :: dtv
       INTEGER, INTENT(in) :: unit, v_list(:)
       CHARACTER(len=*), INTENT(in) :: iotype
@@ -135,21 +140,27 @@ CONTAINS
       CLASS(sortable), ALLOCATABLE :: data
       LOGICAL :: next
       
-      SELECT CASE (iotype)
-      CASE ('NAMELIST')
-         READ(unit, fmt=*, iostat=iostat, iomsg=iomsg) type 
-         IF ( iostat /= 0 ) RETURN    
-         READ(unit, fmt=*, iostat=iostat, iomsg=iomsg) value, next  
-         data = sortable(type, value)
-         CALL add_to_sorted_list(dtv, data)
-      CASE default
-         iostat = 129
-         iomsg = 'iotype ' // TRIM(iotype) // ' not implemented'
-         RETURN
-      END SELECT
-      IF ( next ) THEN
-         CALL read_fmt_list(dtv, unit, iotype, v_list, iostat, iomsg)
-      END IF
+      next = .true.
+      DO WHILE (next)
+         SELECT CASE (iotype)
+         CASE ('NAMELIST')
+            READ(unit, fmt=*, iostat=iostat, iomsg=iomsg) type 
+           !IF ( iostat /= 0 ) RETURN    
+            READ(unit, fmt=*, iostat=iostat, iomsg=iomsg) value, next 
+            !   WRITE(error_unit, *) 'XXXX:', trim(type), ' ', trim(value)
+            
+            ! data = sortable(type, value)
+            ! previous line replaced by the following two statements to work around compiler bugs
+            IF ( allocated(data) ) DEALLOCATE( data )
+            ALLOCATE( data, source=sortable(type, value) )
+            !WRITE(error_unit, *) 'XXX:', data%type_of(), ' ', data%value_of()
+            CALL add_to_sorted_list(dtv, data)
+         CASE default
+            iostat = 129
+            iomsg = 'iotype ' // TRIM(iotype) // ' not implemented'
+            RETURN
+         END SELECT
+      END DO
    END SUBROUTINE
    SUBROUTINE assign_sorted_list(to, from)
       TYPE(sorted_list), INTENT(in), TARGET :: from
@@ -252,14 +263,14 @@ PROGRAM exercise_sorted_list
       ALLOCATE( array(items), mold=sortable(initialize(type_used)) )
       DO i=1, items
          CALL array(i)%set(initialize(type_used, trim(str(i)(:))))
-         WRITE(*,*) array(i)
+         !WRITE(*,*) array(i)
       END DO
 
 ! construct a list
       my_list = sorted_list(array)
       WRITE(*, fmt=*) 'Contents of my_list:'
       WRITE(*, fmt=*) my_list
-      stop
+      
 ! extend existing list
       CALL add_to_sorted_list(my_list, sortable(initialize(type_used, "aargh")))
       CALL add_to_sorted_list(my_list, sortable(initialize(type_used, "phoo")))
@@ -281,7 +292,7 @@ PROGRAM exercise_sorted_list
 
       WRITE(*, fmt=*) 'Contents of your_list:'
       WRITE(*, fmt=*) your_list
-       
+      
 ! concatenation of lists
       joint_list = your_list // my_list
       
