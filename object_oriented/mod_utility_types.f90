@@ -25,7 +25,7 @@ CONTAINS
    TYPE(any_object) FUNCTION create_array(description, value, shape)
       CHARACTER(len=*), INTENT(in) :: description
       CLASS(*), INTENT(in) :: value(:)
-      INTEGER, OPTIONAL, INTENT(in) :: shape(:) ! really ony needed for
+      INTEGER, OPTIONAL, INTENT(in) :: shape(:) ! really only needed for
                                                 ! target rank > 1
       create_array % description = trim(description)
       ALLOCATE( create_array % value, source = value)

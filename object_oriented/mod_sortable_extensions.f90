@@ -62,11 +62,11 @@ CONTAINS
       SELECT CASE ( trim(iotype) )
       CASE ('LISTDIRECTED')
 !         WRITE(error_unit,*) ' to LISTDIRECTED'
-         WRITE(unit, fmt=*, iostat=iostat, iomsg=iomsg) '"',dtv%string,'"'
+         WRITE(unit, fmt=*, iostat=iostat, iomsg=iomsg) '"',dtv%string,'" '
 !         WRITE(error_unit,*) ' LISTDIRECTED done.'
       CASE ('NAMELIST')
 !         WRITE(error_unit,*) ' to NAMELIST'
-         WRITE(unit, fmt=*, iostat=iostat, iomsg=iomsg) '"',dtv%string,'"'
+         WRITE(unit, fmt=*, iostat=iostat, iomsg=iomsg) '"',dtv%string,'" '
 !         WRITE(error_unit,*) ' NAMELIST done.'
       CASE default
          iostat = 129

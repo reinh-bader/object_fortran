@@ -84,7 +84,7 @@ CONTAINS
                a_body%charge = a_body%charge + delta
             END SELECT
          CASE default
-            CALL a_body % body % update(a_change) ! assure that a change to a parent component is dealt with
+            CALL a_body%body%update(a_change) ! assure that a change to a parent component is dealt with
          END SELECT
       END IF
    END SUBROUTINE

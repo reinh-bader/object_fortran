@@ -94,39 +94,60 @@ CONTAINS
          current => current%next
       END DO search
    END SUBROUTINE
-   RECURSIVE SUBROUTINE write_fmt_list(dtv, unit, iotype, v_list, iostat, iomsg)
-      CLASS(sorted_list), INTENT(in) :: dtv
+   SUBROUTINE write_fmt_list(dtv, unit, iotype, v_list, iostat, iomsg)
+      CLASS(sorted_list), INTENT(in):: dtv
       INTEGER, INTENT(in) :: unit, v_list(:)
       CHARACTER(len=*), INTENT(in) :: iotype
       INTEGER, INTENT(out) :: iostat
       CHARACTER(len=*), INTENT(inout) :: iomsg
       
-      CHARACTER(len=2) :: next_component
-      CHARACTER(len=1024) :: record
+      CALL write_internal(dtv)
+   CONTAINS
+      SUBROUTINE write_internal(dtv)
+         CLASS(sorted_list), INTENT(in), TARGET :: dtv
+         ! cannot have the TARGET attribute in host procedure 
+!         INTEGER, INTENT(in) :: unit, v_list(:)
+!         CHARACTER(len=*), INTENT(in) :: iotype
+!         INTEGER, INTENT(out) :: iostat
+!         CHARACTER(len=*), INTENT(inout) :: iomsg
+         
+         CHARACTER(len=2) :: next_component
+         CHARACTER(len=1024) :: record
+         CLASS(sorted_list), POINTER :: p_dtv
       
-!      WRITE(error_unit,*) 'iotype in write_fmt_list ', trim(iotype)
-      SELECT CASE (iotype)
-      CASE ('LISTDIRECTED')
-         WRITE(unit, fmt=*, iostat=iostat, iomsg=iomsg) &
-               dtv%data
-      CASE ('NAMELIST')
-         IF ( associated(dtv%next) ) THEN
-            WRITE(next_component, fmt='("T,")') 
-         ELSE
-            WRITE(next_component, fmt='("F")') 
-         END IF
-         WRITE(record, fmt=*) '"', &
-               dtv%data%type_of(), '",', dtv%data, ',', trim(next_component)
-         !WRITE(error_unit,*) 'YYY', trim(record)
-         WRITE(unit, fmt=*, iostat=iostat, iomsg=iomsg) trim(record)
-      CASE default
-         iostat = 129
-         iomsg = 'iotype ' // trim(iotype) // ' not implemented'
-         RETURN
-      END SELECT
-      IF ( associated(dtv%next) ) THEN
-         CALL write_fmt_list(dtv%next, unit, iotype, v_list, iostat, iomsg)
-      END IF
+         !WRITE(error_unit,*) 'iotype in write_fmt_list ', trim(iotype)
+
+         p_dtv => dtv
+         WRITE(error_unit, *) 'Header ', associated(p_dtv, dtv)
+         iterate_list : DO 
+            SELECT CASE (iotype)
+            CASE ('LISTDIRECTED')
+               WRITE(unit, fmt=*, iostat=iostat, iomsg=iomsg) p_dtv%data%value_of()
+            CASE ('NAMELIST')
+               IF ( associated(p_dtv%next) ) THEN
+                  WRITE(next_component, fmt='("T,")') 
+               ELSE
+                  WRITE(next_component, fmt='("F")') 
+               END IF
+               !WRITE(error_unit, *) 'Header 2', associated(p_dtv, dtv)
+ 
+               IF ( associated(p_dtv, dtv) ) THEN
+                  !WRITE(error_unit, *) 'Header 3 ...'
+                  WRITE(unit, fmt=*) '"', p_dtv%data%type_of(), '",'
+               END IF
+               WRITE(record, fmt=*) '"',p_dtv%data%value_of(), '",', trim(next_component)
+                !WRITE(error_unit,*) 'YYY', trim(record)
+                WRITE(unit, fmt=*, iostat=iostat, iomsg=iomsg) trim(record)
+!               WRITE(unit, fmt=*) p_dtv%data, ',', trim(next_component)
+            CASE default
+               iostat = 129
+               iomsg = 'iotype ' // trim(iotype) // ' not implemented'
+               RETURN
+            END SELECT
+            p_dtv => p_dtv%next
+            IF ( .NOT. associated(p_dtv) ) EXIT iterate_list
+          END DO iterate_list
+       END SUBROUTINE
    END SUBROUTINE
    SUBROUTINE read_fmt_list(dtv, unit, iotype, v_list, iostat, iomsg)
       CLASS(sorted_list), INTENT(inout) :: dtv
@@ -138,13 +159,15 @@ CONTAINS
       INTEGER, PARAMETER :: maxlen=128
       CHARACTER(len=maxlen) :: type, value
       CLASS(sortable), ALLOCATABLE :: data
-      LOGICAL :: next
+      LOGICAL :: first, next
+      
       
       next = .true.
+      first = .true.
       DO WHILE (next)
          SELECT CASE (iotype)
          CASE ('NAMELIST')
-            READ(unit, fmt=*, iostat=iostat, iomsg=iomsg) type 
+            IF (first) READ(unit, fmt=*, iostat=iostat, iomsg=iomsg) type 
            !IF ( iostat /= 0 ) RETURN    
             READ(unit, fmt=*, iostat=iostat, iomsg=iomsg) value, next 
             !   WRITE(error_unit, *) 'XXXX:', trim(type), ' ', trim(value)
@@ -160,6 +183,7 @@ CONTAINS
             iomsg = 'iotype ' // TRIM(iotype) // ' not implemented'
             RETURN
          END SELECT
+         first = .false.
       END DO
    END SUBROUTINE
    SUBROUTINE assign_sorted_list(to, from)
