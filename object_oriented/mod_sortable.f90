@@ -6,6 +6,7 @@ MODULE mod_sortable
    CONTAINS
       PROCEDURE(compare), DEFERRED :: less_than
       PROCEDURE(type_fun), DEFERRED, NOPASS :: type_of
+      ! the following two are kludges to work around compiler bugs
       PROCEDURE(val_fun), DEFERRED :: value_of
       PROCEDURE(set_comp), DEFERRED :: set
       PROCEDURE(dtio_write_fmt), DEFERRED :: write_fmt

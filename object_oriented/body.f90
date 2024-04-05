@@ -79,7 +79,7 @@ CONTAINS
       IF ( allocated(a_change%description) .AND. allocated(a_change%value) ) THEN
          SELECT CASE ( trim(a_change%description) )
          CASE ('charge')
-            SELECT TYPE (delta => a_change%value(1))
+            SELECT TYPE ( delta => a_change%value(1) )
             TYPE IS (real)
                a_body%charge = a_body%charge + delta
             END SELECT

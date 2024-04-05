@@ -105,11 +105,8 @@ CONTAINS
    CONTAINS
       SUBROUTINE write_internal(dtv)
          CLASS(sorted_list), INTENT(in), TARGET :: dtv
-         ! cannot have the TARGET attribute in host procedure 
-!         INTEGER, INTENT(in) :: unit, v_list(:)
-!         CHARACTER(len=*), INTENT(in) :: iotype
-!         INTEGER, INTENT(out) :: iostat
-!         CHARACTER(len=*), INTENT(inout) :: iomsg
+         ! cannot have the TARGET attribute in host procedure, because
+         ! the standard does not permit it for DTIO implementations. 
          
          CHARACTER(len=2) :: next_component
          CHARACTER(len=1024) :: record
@@ -118,7 +115,7 @@ CONTAINS
          !WRITE(error_unit,*) 'iotype in write_fmt_list ', trim(iotype)
 
          p_dtv => dtv
-         WRITE(error_unit, *) 'Header ', associated(p_dtv, dtv)
+         !WRITE(error_unit, *) 'Header ', associated(p_dtv, dtv)
          iterate_list : DO 
             SELECT CASE (iotype)
             CASE ('LISTDIRECTED')
@@ -170,13 +167,13 @@ CONTAINS
             IF (first) READ(unit, fmt=*, iostat=iostat, iomsg=iomsg) type 
            !IF ( iostat /= 0 ) RETURN    
             READ(unit, fmt=*, iostat=iostat, iomsg=iomsg) value, next 
-            !   WRITE(error_unit, *) 'XXXX:', trim(type), ' ', trim(value)
+            !  WRITE(error_unit, *) 'XXXX:', trim(type), ' ', trim(value)
             
             ! data = sortable(type, value)
             ! previous line replaced by the following two statements to work around compiler bugs
             IF ( allocated(data) ) DEALLOCATE( data )
             ALLOCATE( data, source=sortable(type, value) )
-            !WRITE(error_unit, *) 'XXX:', data%type_of(), ' ', data%value_of()
+            ! WRITE(error_unit, *) 'XXX:', data%type_of(), ' ', data%value_of()
             CALL add_to_sorted_list(dtv, data)
          CASE default
             iostat = 129
@@ -287,7 +284,7 @@ PROGRAM exercise_sorted_list
       ALLOCATE( array(items), mold=sortable(initialize(type_used)) )
       DO i=1, items
          CALL array(i)%set(initialize(type_used, trim(str(i)(:))))
-         !WRITE(*,*) array(i)
+!         !WRITE(*,*) array(i)
       END DO
 
 ! construct a list

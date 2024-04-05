@@ -2,7 +2,7 @@
 COMPILER=NAG
 include ../make.inc
 #uncomment the following line to enable full checking
-#FOPT+=$(DEBUG)
+FOPT+=$(DEBUG)
 
 
 all : polynomial.exe sorted_list.exe
