@@ -5,7 +5,7 @@ endif
 ifeq ($(COMPILER),Intel)
 F90=ifx
 CC=icx
-FFLAGS=-standard-semantics
+FFLAGS=-standard-semantics -heap-arrays
 #DEBUG=-g -traceback -check all
 DEBUG=-g -traceback
 FPP=-fpp

@@ -5,7 +5,7 @@ include ../make.inc
 FOPT+=$(DEBUG) 
 
 
-all : body.exe exercise_sortable.exe  sorted_list.exe function_call.exe
+all : body.exe exercise_sortable.exe  sorted_list.exe 
 
 %.exe : %.f90
 	$(F90) $(FFLAGS) $(FOPT) -o $@  $^
@@ -32,9 +32,6 @@ sorted_list.exe : sorted_list.f90 mod_utility_types.o mod_sortable.o mod_sortabl
 	$(F90) $(FFLAGS) $(FOPT) -o $@  $^
 
 object_setup.exe : object_setup.f90 mod_utility_types.o 
-	$(F90) $(FFLAGS) $(FOPT) -o $@  $^
-
-function_call.exe : function_call.f90 mod_utility_types.o 
 	$(F90) $(FFLAGS) $(FOPT) -o $@  $^
 
 clean :
