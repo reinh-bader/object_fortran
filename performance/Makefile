@@ -1,8 +1,9 @@
 # The ../make.inc file contains possible settings for COMPILER
-COMPILER=GCC
+COMPILER=Intel
 include ../make.inc
 #uncomment the following line to enable full checking
 FOPT+=$(DEBUG) 
+#FOPT+=-openmp
 
 
 all : function_call.exe

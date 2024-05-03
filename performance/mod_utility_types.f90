@@ -15,6 +15,22 @@ MODULE mod_utility_types
      MODULE PROCEDURE create_array
      MODULE PROCEDURE create_array_r2
   END INTERFACE any_object
+  
+!  TYPE, PUBLIC :: any_object_ref
+!     CHARACTER(len=:), ALLOCATABLE :: description
+!     INTEGER :: rank
+!     CLASS(*), POINTER, CONTIGUOUS :: value_r1(:) => null()
+!     CLASS(*), POINTER, CONTIGUOUS :: value_r2(:,:) => null()
+! END TYPE any_object_ref
+  TYPE, PUBLIC :: any_object_ref
+     CHARACTER(len=:), ALLOCATABLE :: description
+     CLASS(*), POINTER, CONTIGUOUS :: value_r1(:) => null()
+     CLASS(*), POINTER, CONTIGUOUS :: value_r2(:,:) => null()
+  END TYPE any_object_ref
+  
+!  INTERFACE any_object_ref
+!     MODULE PROCEDURE create_array_ref
+!  END INTERFACE any_object_ref
 
   !
   ! parameterized functions
@@ -77,6 +93,24 @@ CONTAINS
               reshape(value, shape = [ size(value) ]) )
     create_array_r2 % shape = shape(value)
   END FUNCTION create_array_r2
+  !
+  ! construction of any_object_ref arrays
+!  TYPE(any_object_ref) FUNCTION create_array_ref(description, value)
+!    CHARACTER(len=*), INTENT(in) :: description
+!    CLASS(*), POINTER, CONTIGUOUS, INTENT(in) :: value(..)
+    
+!    create_array_ref % description = trim(description)
+!    SELECT RANK (value)
+!    RANK (1)
+!       create_array_ref % rank = 1
+!       create_array_ref % value_r1 => value
+!    RANK (2)
+!       create_array_ref % rank = 2
+!       create_array_ref % value_r2 => value
+!    RANK default
+!       ERROR STOP 'only ranks 1,2 implemented'
+!    END SELECT
+!  END FUNCTION create_array_ref
   !
   ! construction of parameterized function objects
   TYPE(pfunc_type) FUNCTION create_pfunc_type(fp, param)
