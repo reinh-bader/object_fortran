@@ -3,12 +3,13 @@ MODULE mod_polynomial
    PRIVATE
    PUBLIC :: eval_polynomial, OPERATOR (*), WRITE(formatted)
    TYPE, PUBLIC :: polynomial
-      PRIVATE              ! prevent explicit component allocation with
-                           ! potentially incorrect bounds outside the module 
+      PRIVATE              ! type is opaque to prevent explicit 
+                           ! component allocation with potentially
+                           ! incorrect bounds outside the module 
       REAL, ALLOCATABLE :: a(:)
    END TYPE
    
-   INTERFACE polynomial    ! overload to assure correct lower bound
+   INTERFACE polynomial    ! overload to assure correct bounds
                            ! when creating a polynomial object
       MODULE PROCEDURE :: create_polynomial
    END INTERFACE
@@ -36,8 +37,13 @@ CONTAINS
       END IF
    END FUNCTION
    PURE TYPE(polynomial) FUNCTION create_polynomial(a)
-      REAL, INTENT(in) :: a(0:)  ! upper bound is interpreted as degree
-      create_polynomial%a = a    ! preserves remapped bounds of right hand side
+      REAL, INTENT(in) :: a(0:)  
+      
+      INTEGER :: degree(1)
+      
+      degree = findloc( a /= 0.0, value=.true., back=.true. ) - 1
+      ALLOCATE( create_polynomial%a(0:degree(1)) )
+      create_polynomial%a(0:) = a(0:degree(1))  
    END FUNCTION
    PURE TYPE(polynomial) FUNCTION multiply_polynomial(p1, p2)
       TYPE(polynomial), INTENT(in) :: p1, p2
@@ -90,7 +96,7 @@ PROGRAM exercise_polynomial
 !
 ! default assignment
 !
-  p = polynomial( a = [ -1., 4., 0., 1. ] ) ! use keyword, just for fun
+  p = polynomial( a = [ -1., 4., 0., 1.] ) ! use keyword, just for fun
   q = p
   x = [ 0., 2. ]
   y = eval_polynomial(q, x)

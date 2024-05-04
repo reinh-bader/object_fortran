@@ -5,11 +5,12 @@ endif
 ifeq ($(COMPILER),Intel)
 F90=ifx
 CC=icx
-FFLAGS=-standard-semantics
+FFLAGS=-standard-semantics -heap-arrays
 #DEBUG=-g -traceback -check all
 DEBUG=-g -traceback
 FPP=-fpp
-FOPT=-O3 -xAVX  # for Sandy Bridge
+FOPT=-O3 -xHost -arch Host
+!FOPT=-O3 -xAVX  # for Sandy Bridge
 #FOPT=-O3 -xAVX2  # for Haswell
 #FOPT=-O3 -xSKYLAKE-AVX512  
 #FOPT=-O3 -xSSE2
@@ -41,7 +42,8 @@ F90=nagfor
 CC=gcc
 FFLAGS=-f2018
 #DEBUG=-g -mtrace -C=all
-DEBUG=-g -C=all
+#DEBUG=-g -C=all
+DEBUG=-g -C
 FPP=-fpp
 FOPT=-O3
 FPAR=-openmp

@@ -5,7 +5,7 @@ PROGRAM exercise_sortable
    
    WRITE(*,*) 'Enter desired extension type'
    READ(*,*) typename 
-   WRITE(*,*) 'Enter two string values'
+   WRITE(*,*) 'Enter values for two variables'
    READ(*,*) str1, str2
 
    s1 = sortable( initialize(trim(typename), trim(str1)) )
@@ -15,12 +15,12 @@ PROGRAM exercise_sortable
       
    IF ( allocated(s1) .AND. allocated(s2) ) THEN
       IF ( s1 < s2 ) THEN
-         WRITE(*,*) 'String ', s1, ' precedes string ', s2
+         WRITE(*,*) 'Object ', s1, ' precedes object ', s2
       ELSE
-         WRITE(*,*) 'String ', s1, ' does not precede string ', s2
+         WRITE(*,*) 'Object ', s1, ' does not precede object', s2
       END IF
    ELSE
-      WRITE(*,*) 'At least one of the strings was not allocated.'
+      WRITE(*,*) 'At least one of the objects was not allocated.'
       WRITE(*,*) 'Hint: currently only the type "sortable_string" is supported'
    END IF
    
