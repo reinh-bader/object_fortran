@@ -58,8 +58,6 @@ CONTAINS
       
       INTEGER :: i
       
-      IF (size(item_array) == 0) RETURN
-      
       DO i = 1, size(item_array)
          CALL add_to_sorted_list(head, item_array(i))
          ! handles tedious details of pointer fiddling
