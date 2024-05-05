@@ -40,7 +40,7 @@ PROGRAM function_call
   IMPLICIT none
 
   TYPE(pfunc_type) :: pfunc_obj
-  REAL, PARAMETER :: piby4 = atan(1.0), piby4_arr(4) = [ piby4, 2.*piby4, 3*piby4, 4*piby4 ]
+  REAL, PARAMETER :: piby4 = atan(1.0), piby4_arr(4) = [ piby4, 2.*piby4, 3.*piby4, 4.*piby4 ]
   INTEGER :: ndim, i
   REAL, ALLOCATABLE :: array(:)
   DOUBLE PRECISION t1, t2, s1, s2
@@ -51,23 +51,23 @@ PROGRAM function_call
   TYPE(new) :: o_new
 
   pfunc_obj = pfunc_type(psin, 2)
-  WRITE(*,*) pfunc_obj%f(piby4)
+  WRITE(*,*) 'Scalar version with INTEGER parameter: ', pfunc_obj%f(piby4)
 
   pfunc_obj = pfunc_type(psin, 2.)
-  WRITE(*,*) pfunc_obj%f(piby4)
+  WRITE(*,*) 'Scalar version with REAL parameter: ', pfunc_obj%f(piby4)
   
   pfunc_obj = pfunc_type(psin)
-  WRITE(*,*) pfunc_obj%f(piby4)
+  WRITE(*,*) 'Scalar version without parameter: ', pfunc_obj%f(piby4)
   
   pfunc_obj = pfunc_type(psin, o_new)
-  WRITE(*,*) pfunc_obj%f(piby4)
+  WRITE(*,*) 'Scalar version with ignored parameter: ', pfunc_obj%f(piby4)
 
   pfunc_obj = pfunc_type(psin_array, 2.)
-  WRITE(*,*) pfunc_obj%f(piby4_arr)
+  WRITE(*,*) 'Array version with parameter: ', pfunc_obj%f(piby4_arr)
 
-  WRITE(*,*) pfunc_obj%f([piby4])
+  WRITE(*,*) 'Array version using constructor: ', pfunc_obj%f([piby4])
   
-  WRITE(*,*) pfunc_obj%f(piby4)
+  WRITE(*,*) 'Array version with scalar argument: ', pfunc_obj%f(piby4)
   
   WRITE(*,*) 'Enter array size for performance evaluation.'
   READ(*,*) ndim

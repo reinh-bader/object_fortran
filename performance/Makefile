@@ -1,5 +1,5 @@
 # The ../make.inc file contains possible settings for COMPILER
-COMPILER=Intel
+COMPILER=GCC
 include ../make.inc
 #uncomment the following line to enable full checking
 FOPT+=$(DEBUG) 

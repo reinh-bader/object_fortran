@@ -1,4 +1,5 @@
 MODULE mod_utility_types
+  ! USE, intrinsic :: iso_fortran_env, ONLY: error_unit
   IMPLICIT none
   PRIVATE 
 
@@ -16,22 +17,6 @@ MODULE mod_utility_types
      MODULE PROCEDURE create_array_r2
   END INTERFACE any_object
   
-!  TYPE, PUBLIC :: any_object_ref
-!     CHARACTER(len=:), ALLOCATABLE :: description
-!     INTEGER :: rank
-!     CLASS(*), POINTER, CONTIGUOUS :: value_r1(:) => null()
-!     CLASS(*), POINTER, CONTIGUOUS :: value_r2(:,:) => null()
-! END TYPE any_object_ref
-  TYPE, PUBLIC :: any_object_ref
-     CHARACTER(len=:), ALLOCATABLE :: description
-     CLASS(*), POINTER, CONTIGUOUS :: value_r1(:) => null()
-     CLASS(*), POINTER, CONTIGUOUS :: value_r2(:,:) => null()
-  END TYPE any_object_ref
-  
-!  INTERFACE any_object_ref
-!     MODULE PROCEDURE create_array_ref
-!  END INTERFACE any_object_ref
-
   !
   ! parameterized functions
   TYPE, PUBLIC :: pfunc_type
@@ -94,29 +79,12 @@ CONTAINS
     create_array_r2 % shape = shape(value)
   END FUNCTION create_array_r2
   !
-  ! construction of any_object_ref arrays
-!  TYPE(any_object_ref) FUNCTION create_array_ref(description, value)
-!    CHARACTER(len=*), INTENT(in) :: description
-!    CLASS(*), POINTER, CONTIGUOUS, INTENT(in) :: value(..)
-    
-!    create_array_ref % description = trim(description)
-!    SELECT RANK (value)
-!    RANK (1)
-!       create_array_ref % rank = 1
-!       create_array_ref % value_r1 => value
-!    RANK (2)
-!       create_array_ref % rank = 2
-!       create_array_ref % value_r2 => value
-!    RANK default
-!       ERROR STOP 'only ranks 1,2 implemented'
-!    END SELECT
-!  END FUNCTION create_array_ref
-  !
   ! construction of parameterized function objects
   TYPE(pfunc_type) FUNCTION create_pfunc_type(fp, param)
     PROCEDURE(pfunc) :: fp
     CLASS(*), INTENT(in), OPTIONAL :: param
     create_pfunc_type%fp => fp
+    ! write(error_unit,*) 'scalar: ',associated(create_pfunc_type%fp), associated(create_pfunc_type%fp_array)
     IF ( present(param) ) THEN
        ALLOCATE(create_pfunc_type%param, source=param)
     END IF
@@ -125,6 +93,7 @@ CONTAINS
     PROCEDURE(pfunc_array) :: fp_array
     CLASS(*), INTENT(in), OPTIONAL :: param
     create_pfunc_type_array%fp_array => fp_array
+    ! write(error_unit,*) 'array: ',associated(create_pfunc_type_array%fp), associated(create_pfunc_type_array%fp_array)
     IF ( present(param) ) THEN
        ALLOCATE(create_pfunc_type_array%param, source=param)
     END IF
@@ -135,6 +104,8 @@ CONTAINS
   REAL FUNCTION f_scalar(this, x)
     CLASS(pfunc_type), INTENT(in) :: this
     REAL, INTENT(in) :: x
+
+    ! write(error_unit,*) 'f_scalar: ',associated(this%fp), associated(this%fp_array)
 
     IF ( associated(this%fp) ) THEN
        f_scalar = this%fp(x, this%param)
@@ -150,6 +121,9 @@ CONTAINS
     CLASS(pfunc_type), INTENT(in) :: this
     REAL, INTENT(in) :: x(:)
     REAL :: r(size(x))
+    
+    ! write(error_unit,*) 'f_array: ',associated(this%fp), associated(this%fp_array)
+
 
     ! Note that support for the scalar version is omitted here, since
     ! the procedure call overhead, including type resolution, would

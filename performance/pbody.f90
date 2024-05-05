@@ -96,7 +96,8 @@ CONTAINS
     INTEGER, INTENT(in) :: shape(2)
     TARGET :: create_propagate_change
     
-    create_propagate_change%change = change(description, value, shape)
+    ! create_propagate_change%change = change(description, value, shape)
+    create_propagate_change%any_object = change(description, value, shape)
     SELECT TYPE ( p => create_propagate_change%value )
     TYPE IS (REAL)
        create_propagate_change%wk(1:shape(1),1:shape(2)) => p

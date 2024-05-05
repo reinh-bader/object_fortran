@@ -13,8 +13,6 @@ MODULE mod_body
       REAL :: pos(3), vel(3)
    CONTAINS
       PROCEDURE :: update => update_body
-!      PROCEDURE :: update_bodies
-!      GENERIC :: update => update_body, update_bodies
    END TYPE
 
    TYPE, PUBLIC :: force_field
@@ -22,7 +20,7 @@ MODULE mod_body
    END type force_field
    
    TYPE, EXTENDS(change), PUBLIC :: propagate_change
-      REAL, POINTER :: wk(:, :) => null()
+      REAL, POINTER, CONTIGUOUS :: wk(:, :) => null()
    END TYPE
    
    INTERFACE propagate_change
@@ -70,66 +68,6 @@ CONTAINS
          END SELECT
       END IF
    END SUBROUTINE
-!   SUBROUTINE update_bodies(bodies, a_change, mask)
-!      CLASS(body), INTENT(inout) :: bodies(:)
-!      TYPE(change), INTENT(in) :: a_change
-!      LOGICAL, OPTIONAL, INTENT(in) :: mask(:)
-      
-!      INTEGER :: i, nbodies
-!      REAL, POINTER :: pw(:,:)
-      
-!      nbodies = size(bodies)
-   
-!      IF ( allocated(a_change%description) .AND. allocated(a_change%value) ) THEN
-!         SELECT CASE ( trim(a_change%description) )
-!         CASE ('mass')
-!            SELECT TYPE ( delta => a_change%value )
-!            TYPE IS (real)
-!               IF ( size(delta) >= nbodies ) THEN
-!                  IF ( present(mask) ) THEN
-!                     WHERE (mask) bodies%mass = bodies%mass + delta(1:nbodies)
-!                  ELSE
-!                     bodies%mass = bodies%mass + delta(1:nbodies)
-!                  END IF
-!               END IF
-!            END SELECT
-!         CASE ('momentum')
-!            SELECT TYPE ( delta => a_change%value )
-!            TYPE IS (real)
-!               IF ( size(delta) >= 3 * nbodies ) THEN
-!                  pw(1:nbodies,1:3) => delta
-!                  IF ( present(mask) ) THEN
-!                     DO i = 1, size(bodies)
-!                        IF ( mask(i) )  &
-!                             bodies(i) % vel(:) = bodies(i) % vel(:) + pw(i,1:3) / bodies(i) % mass 
-!                     END DO
-!                  ELSE
-!                    DO i = 1, size(bodies)
-!                        bodies(i) % vel(:) = bodies(i) % vel(:) + pw(i,1:3) / bodies(i) % mass 
-!                     END DO
-!                 END IF
-!               END IF
-!           END SELECT
-!         CASE ('position')
-!            SELECT TYPE ( delta => a_change%value )
-!            TYPE IS (real)
-!               IF ( size(delta) >= 3 * nbodies ) THEN
-!                  pw(1:nbodies,1:3) => delta
-!                  IF ( present(mask) ) THEN
-!                     DO i = 1, size(bodies)
-!                        IF ( mask(i) ) bodies(i)%pos = bodies(i)%pos + pw(i,1:3) 
-!                     END DO
-!                  ELSE 
-!                    DO i = 1, size(bodies)
-!                       bodies(i)%pos = bodies(i)%pos + pw(i,1:3) 
-!                    END DO
-!                  END IF
-!               END IF
-!            END SELECT
-!         END SELECT
-!      END IF
-!   END SUBROUTINE
-   
 !
 ! construct propagate_change
    TYPE(propagate_change) FUNCTION create_propagate_change(description, value, shape)
@@ -139,6 +77,7 @@ CONTAINS
     TARGET :: create_propagate_change
     
     create_propagate_change%change = change(description, value, shape)
+    ! create_propagate_change%any_object = change(description, value, shape)
     SELECT TYPE ( p => create_propagate_change%value )
     TYPE IS (REAL)
        create_propagate_change%wk(1:shape(1),1:shape(2)) => p
