@@ -162,7 +162,7 @@ CONTAINS
             END IF
          END DO
          
-      CASE ("arrayproc") 
+      CASE ("arrayref") 
       
       
          num_active = 0
@@ -184,10 +184,30 @@ CONTAINS
            bodies(i)%pos = wk_pos%wk(i,:)
            bodies(i)%vel = wk_mom%wk(i,:)
          END DO
-      
-      !wk_pos%wk = delta_t * bodies%vel
-      !wk_mom%wk = delta_t * a_field%f
          
+      CASE ("dirnodep") 
+
+         num_active = 0
+         DO i=1, size(bodies)
+            IF ( bodies(i)%pos(3) > 0.0 ) THEN
+               bodies(i)%pos = bodies(i)%pos + delta_t * bodies(i)%vel
+               num_active = num_active + 1
+               IF ( bodies(i)%pos(3) <= 0.0 ) THEN
+                  num_active = num_active - 1
+               END IF
+            END IF
+         END DO
+         DO i=1, size(bodies)
+            IF ( bodies(i)%pos(3) > 0.0 ) THEN
+               bodies(i)%vel = bodies(i)%vel + delta_t * a_field%f(1:3,i) / bodies(i)%mass
+            ELSE
+               !
+               ! inelastic landing (implies that no further propagation is done)
+               bodies(i)%pos(3) = 0.0
+               bodies(i)%vel = 0.0
+            END IF
+         END DO  
+      
       END SELECT
       !write(*,'("b1 mass, pos and vel: ",7ES10.3)')  bodies(1)
       
@@ -210,7 +230,7 @@ PROGRAM performance_variants
    
    WRITE(*,*) 'Enter the number of bodies.'
    READ(*,*) nbodies
-   WRITE(*,*) 'Select direct (1), scalar TBP (2), array TBP (3)'
+   WRITE(*,*) 'Select direct (1), scalar TBP (2), array ref (3), dirnodep (4)'
    READ(*,*) selection
    SELECT CASE (selection)
    CASE (1)
@@ -218,7 +238,9 @@ PROGRAM performance_variants
    CASE (2) 
       variant = "procedure"
    CASE (3) 
-      variant = "arrayproc"
+      variant = "arrayref"
+   CASE (4) 
+      variant = "dirnodep"
    END SELECT
    
    WRITE(*,*) 'Simulating ',nbodies, ' bodies with variant "',variant,'"'
